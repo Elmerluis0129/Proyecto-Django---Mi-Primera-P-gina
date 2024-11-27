@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Productos</title>
+</head>
+<body>
+    <h1>¡Bienvenidos a mi proyecto!</h1>
+    <h2>Lista de Productos</h2>
+    <ul>
+        {% for producto in productos %}
+            <li>
+                <strong>Nombre:</strong> {{ producto.nombre }}<br>
+                <strong>Descripción:</strong> {{ producto.descripcion }}<br>
+                <strong>Precio:</strong> ${{ producto.precio }}<br>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
