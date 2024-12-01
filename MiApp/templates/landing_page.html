@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+{% load static %}
+<div class="container mt-5">
+    <div class="home-container">
+        <img src="{% static 'images/logo_grande.png' %}" alt="TutorConnect Logo" class="logo">
+        <h1>¡Bienvenidos a nuestro proyecto!</h1>
+        <p>Para acceder a las tutorías, por favor inicia sesión.</p>
+        <!-- Botón de Login -->
+        <a href="{% url 'login' %}">
+            <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+        </a>
+    </div>
+</div>
+{% endblock %}

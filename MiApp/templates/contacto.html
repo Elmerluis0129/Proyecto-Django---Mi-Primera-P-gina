@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Contáctanos{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="home-container">
+        <h1 class="text-center">Contáctanos</h1>
+        
+        <!-- Bloque para mostrar mensajes de feedback -->
+        {% if messages %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {% for message in messages %}
+                    {{ message }}
+                {% endfor %}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+
+        <p class="text-center">
+            Completa el formulario para enviarnos tus preguntas o comentarios.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="name" class="form-label">Nombre</label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="Tu nombre" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Correo Electrónico</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Tu correo" required>
+            </div>
+            <div class="mb-3">
+                <label for="message" class="form-label">Mensaje</label>
+                <textarea class="form-control" id="message" name="message" rows="5" placeholder="Tu mensaje" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 btn-enviar">Enviar</button>
+
+        </form>
+
+        <!-- Botón para abrir el cliente de correo -->
+        <div class="mt-4 text-center">
+            
+            <a href="mailto:ejemplo@correo.com?subject=Consulta%20desde%20el%20formulario%20de%20contacto&body=Hola,%20quiero%20consultar%20sobre..."
+            class="btn-animado">
+            <i class="bi bi-envelope-fill"></i>
+            <span>Abrir correo</span>
+            </a>
+
+
+        </div>
+
+        <div class="redes-sociales text-center mt-4">
+            <h4>Síguenos en redes sociales</h4>
+            <a href="https://twitter.com" target="_blank"><i class="bi bi-twitter"></i></a>
+            <a href="https://facebook.com" target="_blank"><i class="bi bi-facebook"></i></a>
+            <a href="https://instagram.com" target="_blank"><i class="bi bi-instagram"></i></a>
+            <a href="https://linkedin.com" target="_blank"><i class="bi bi-linkedin"></i></a>
+            <a href="https://github.com/Elmerluis0129/Proyecto-Django-Final.git" target="_blank"><i class="bi bi-github"></i></a>          
+        </div>
+    </div>
+</div>
+{% endblock %}

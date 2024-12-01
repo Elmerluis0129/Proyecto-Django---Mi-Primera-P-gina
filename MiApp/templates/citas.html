@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="home-container">
+    <h1 class="text-center">Mis Citas</h1>
+
+    {% if citas %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre de la Cita</th>
+                    <th>Usuario</th>
+                    <th>Estado</th>
+                    <th>Fecha y Hora</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cita in citas %}
+                <tr>
+                    <td>{{ cita.nombre_cita }}</td>
+                    <td>{{ cita.usuario.username }}</td>
+                    <td>{{ cita.estado }}</td>
+                    <td>{{ cita.fecha }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="alert alert-info">No tienes citas programadas.</p>
+    {% endif %}
+</div>
+{% endblock %}

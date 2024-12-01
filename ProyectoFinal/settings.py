@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,6 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/login/'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -52,10 +56,28 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'ProyectoFinal.urls'
 
+STATIC_URL = '/static/'
+
+# Solo para desarrollo
+if DEBUG:
+    STATICFILES_DIRS = [
+        BASE_DIR / "static",  # Ruta a tu carpeta 'static'
+    ]
+    
+# settings.py
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'djangoproyectofinal@gmail.com'  # Reemplaza con tu correo
+EMAIL_HOST_PASSWORD = 'Djangoproyectofinal1234'  # Reemplaza con tu contraseña
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # Incluye el directorio base de plantillas
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -67,6 +89,14 @@ TEMPLATES = [
         },
     },
 ]
+
+
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+
+
+LOGIN_REDIRECT_URL = 'home'  # Redirige a 'home' después de un login exitoso
 
 WSGI_APPLICATION = 'ProyectoFinal.wsgi.application'
 

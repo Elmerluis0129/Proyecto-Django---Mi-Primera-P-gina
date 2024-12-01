@@ -1,20 +1,62 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Lista de Productos</title>
-</head>
-<body>
-    <h1>¡Bienvenidos a mi proyecto!</h1>
-    <h2>Lista de Productos</h2>
-    <ul>
-        {% for producto in productos %}
-            <li>
-                <strong>Nombre:</strong> {{ producto.nombre }}<br>
-                <strong>Descripción:</strong> {{ producto.descripcion }}<br>
-                <strong>Precio:</strong> ${{ producto.precio }}<br>
-            </li>
-        {% endfor %}
-    </ul>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<div class="home-container">
+    <h1 class="text-center">TutorConnect</h1>
+
+    <div id="tutoriaCarousel" class="carousel slide" data-bs-ride="carousel">
+        <!-- Indicadores -->
+        <div class="carousel-indicators">
+            {% for i in tutorias %}
+            <button type="button" data-bs-target="#tutoriaCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
+                    class="{% if forloop.first %}active{% endif %}" aria-current="true"
+                    aria-label="Slide {{ forloop.counter }}"></button>
+            {% endfor %}
+        </div>
+    
+        <!-- Contenido del carrusel -->
+        <div class="carousel-inner">
+            {% for tutoria in tutorias %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                <div class="container d-flex justify-content-center align-items-center" style="min-height: 300px;">
+                    <div class="card text-center" style="max-width: 600px; width: 100%;"> <!-- Ajuste del ancho -->
+                        <div class="card-body">
+                            <h5 class="card-title">{{ tutoria.titulo }}</h5>
+                            <p class="card-text">{{ tutoria.descripcion }}</p>
+                            <p><strong>Fecha:</strong> {{ tutoria.fecha }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    
+        <!-- Controles -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#tutoriaCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Anterior</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#tutoriaCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Siguiente</span>
+        </button>
+    </div>
+    
+    
+
+    <!-- Botón de Panel Administrativo -->
+    <div class="text-center mt-4">
+        <a href="{% url 'admin:index' %}" target="_blank" class="btn btn-primary">Panel Administrativo</a>
+    </div>
+
+    <!-- Botón de Logout -->
+    <div class="text-center mt-2">
+        <form method="POST" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Cerrar sesión</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
