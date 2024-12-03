@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="home-container">
+    <h1 class="text-center mb-4">Mis Solicitudes de Tutorías</h1>
+
+    {% if solicitudes %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre de la Tutoría</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Fecha (Desde - Hasta)</th>
+                    <th>Lugar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for solicitud in solicitudes %}
+                <tr>
+                    <td>{{ solicitud.nombre_tutoria }}</td>
+                    <td>{{ solicitud.descripcion }}</td>
+                    <td>
+                        {% if solicitud.estado == "Pendiente" %}
+                        <span class="badge bg-warning text-dark">Pendiente</span>
+                        {% elif solicitud.estado == "Aprobado" %}
+                        <span class="badge bg-success">Aprobado</span>
+                        {% elif solicitud.estado == "Rechazado" %}
+                        <span class="badge bg-danger">Rechazado</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if solicitud.fecha_inicio and solicitud.fecha_fin %}
+                        {{ solicitud.fecha_inicio|date:"d/m/Y" }} - {{ solicitud.fecha_fin|date:"d/m/Y" }}
+                        {% else %}
+                        <span class="text-muted">Sin definir</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if solicitud.lugar %}
+                        {{ solicitud.lugar }}
+                        {% else %}
+                        <span class="text-muted">Sin asignar</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="alert alert-info text-center">No tienes solicitudes de tutorías registradas.</p>
+    {% endif %}
+</div>
+
+<!-- Botón para abrir el modal -->
+<button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#solicitarTutoriaModal">
+    Solicitar Tutoría
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="solicitarTutoriaModal" tabindex="-1" aria-labelledby="solicitarTutoriaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="solicitarTutoriaModalLabel">Solicitar Tutoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="solicitarTutoriaForm">
+                    <div class="mb-3">
+                        <label for="nombreTutoria" class="form-label">Nombre de la Tutoría</label>
+                        <input type="text" class="form-control" id="nombreTutoria" placeholder="Ingresa el nombre de la tutoría" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcionTutoria" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcionTutoria" rows="3" placeholder="Describe tu necesidad" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="enviarSolicitudBtn">Enviar Solicitud</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('enviarSolicitudBtn').addEventListener('click', function () {
+        const nombreTutoria = document.getElementById('nombreTutoria').value;
+        const descripcionTutoria = document.getElementById('descripcionTutoria').value;
+
+        if (!nombreTutoria || !descripcionTutoria) {
+            alert('Por favor, completa todos los campos.');
+            return;
+        }
+
+        fetch('/crear-solicitud-tutoria/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken') // Incluye CSRF si es necesario
+            },
+            body: JSON.stringify({
+                nombre_tutoria: nombreTutoria,
+                descripcion: descripcionTutoria
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(`Error: ${data.error}`);
+            } else {
+                alert('Solicitud enviada exitosamente.');
+                // Cierra el modal y recarga la página
+                const modal = bootstrap.Modal.getInstance(document.getElementById('solicitarTutoriaModal'));
+                modal.hide();
+                location.reload();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // Función para obtener el CSRF Token de las cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === name + '=') {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
+{% endblock %}

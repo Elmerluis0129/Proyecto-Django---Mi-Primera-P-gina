@@ -11,28 +11,7 @@
         <button id="search-btn">
             <i class="bi bi-search"></i> <!-- Ícono de lupa de Bootstrap -->
         </button>
-        <button id="request-tutoria-btn" class="btn btn-success">
-            <i class="bi bi-file-earmark-text"></i> Solicitar Tutoría
-        </button>
-    </div>
-
-    <!-- Modal de Solicitar Tutoría -->
-    <div id="requestTutoriaModal" class="custom-modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-modal">&times;</span>
-            <h2>Solicitar Tutoría</h2>
-            <form id="request-tutoria-form">
-                <div class="mb-3">
-                    <label for="tutoria-name" class="form-label">Nombre de la tutoría</label>
-                    <input type="text" class="form-control" id="tutoria-name" placeholder="Ej. Matemáticas">
-                </div>
-                <div class="mb-3">
-                    <label for="tutoria-description" class="form-label">¿Qué necesitas reforzar o aprender?</label>
-                    <textarea class="form-control" id="tutoria-description" rows="3" placeholder="Descripción de lo que quieres aprender o reforzar..."></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">Enviar Solicitud</button>
-            </form>
-        </div>
+        
     </div>
 
 
@@ -47,19 +26,15 @@
         <button id="view-small" class="btn">Vista Pequeña</button>
     </div>
 
-    <!-- Contenedor de Tutorías -->
     <div id="tutorias-container" class="tutorias-container large-view">
-        {% for tutoria in tutorias %}
         <div class="card">
             <h3>{{ tutoria.titulo }}</h3>
-            <p><strong>Duración:</strong> {{ tutoria.duracion }}</p>
-            <p><strong>Precio:</strong> {{ tutoria.precio }}</p>
             <p>{{ tutoria.descripcion }}</p>
-            <button class="btn btn-primary">Inscribirse</button>
+            <p><strong>Duración:</strong> {{ tutoria.duracion_con_unidad }}</p>
+            <p><strong>Precio:</strong> {{ tutoria.precio_display }}</p>
         </div>
-        {% endfor %}
     </div>
-    
+
 
     <!-- Controles de Paginación -->
     <div class="pagination-container">

@@ -23,50 +23,65 @@ class Cita(models.Model):
         verbose_name = 'Cita'
         verbose_name_plural = 'Citas'
         
+
 class SolicitudTutoria(models.Model):
-    estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='solicitudes')
-    nombre_tutoria = models.CharField(max_length=255)
+    estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='solicitudes_tutorias')
+    nombre_tutoria = models.CharField(max_length=100)
     descripcion = models.TextField()
-    estado = models.CharField(max_length=50, choices=[('Pendiente', 'Pendiente'), ('Aceptada', 'Aceptada'), ('Rechazada', 'Rechazada')], default='Pendiente')
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(
+        max_length=50,
+        choices=[('Pendiente', 'Pendiente'), ('Aprobado', 'Aprobado'), ('Rechazado', 'Rechazado')],
+        default='Pendiente'
+    )
+    fecha_inicio = models.DateField(null=True, blank=True)  # Fecha inicial
+    fecha_fin = models.DateField(null=True, blank=True)  # Fecha final
+    lugar = models.CharField(max_length=200, null=True, blank=True)  # Lugar
+    fecha_creacion = models.DateTimeField(auto_now_add=True)  # Fecha de creación automática
+
+    def clean(self):
+        # Si la solicitud está aprobada, verificar los campos obligatorios
+        if self.estado == 'Aprobado':
+            if not self.fecha_inicio or not self.fecha_fin or not self.lugar:
+                raise ValidationError("Si el estado es 'Aprobado', debe especificar fecha y lugar.")
+
+    def save(self, *args, **kwargs):
+        self.clean()  # Llama a la validación personalizada antes de guardar
+        super(SolicitudTutoria, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.nombre_tutoria
 
 class Tutoria(models.Model):
+    UNIDADES_DURACION = [
+        ('min', 'Minutos'),
+        ('hr', 'Horas'),
+        ('day', 'Días'),
+        ('wk', 'Semanas'),
+    ]
+
     titulo = models.CharField(max_length=100)
     descripcion = models.TextField()
-    fecha = models.DateTimeField()  # Este campo debe existir
-    duracion = models.PositiveIntegerField(help_text="Duración en minutos")
+    fecha = models.DateTimeField()
+    duracion = models.PositiveIntegerField(help_text="Duración en número")
+    unidad_duracion = models.CharField(max_length=3, choices=UNIDADES_DURACION, default='min')
     precio = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     es_gratis = models.BooleanField(default=False)
+    estudiantes = models.ManyToManyField(
+        User,
+        related_name="tutorias",
+        blank=True,
+    )
 
-    def clean(self):
-        # Validar que si no es gratis, el precio debe ser mayor a 0
-        if self.es_gratis and self.precio:
-            raise ValidationError("No se puede marcar 'Es gratis' y establecer un precio al mismo tiempo.")
-        if not self.es_gratis and (self.precio is None or self.precio <= 0):
-            raise ValidationError("Debe ingresar un precio mayor a 0 si la tutoría no es gratis.")
+    def duracion_con_unidad(self):
+        # Retornar duración correctamente con unidad
+        return f"{self.duracion} {self.get_unidad_duracion_display()}"
 
-    def get_duration_display(self):
-        # Convertir la duración a horas y minutos o días
-        if self.duracion < 60:
-            return f"{self.duracion} minutos"
-        elif self.duracion < 1440:
-            horas = self.duracion // 60
-            minutos = self.duracion % 60
-            return f"{horas} horas {minutos} minutos" if minutos else f"{horas} horas"
-        else:
-            dias = self.duracion // 1440
-            horas = (self.duracion % 1440) // 60
-            return f"{dias} días {horas} horas" if horas else f"{dias} días"
+    def precio_display(self):
+        # Manejar precios para tutorías gratuitas
+        return "Gratis" if self.es_gratis or not self.precio else f"${self.precio:,.2f}"
 
     def __str__(self):
         return self.titulo
-
-
-
-
 
 
 

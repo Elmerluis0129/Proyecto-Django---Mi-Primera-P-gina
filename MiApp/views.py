@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -14,6 +14,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.models import User
 from .models import SolicitudTutoria
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 import json
 
 def contacto(request):
@@ -31,8 +32,8 @@ def contacto(request):
     
     return render(request, 'contacto.html')
 
-
 @csrf_exempt
+@login_required
 def crear_solicitud_tutoria(request):
     if request.method == 'POST':
         try:
@@ -45,15 +46,28 @@ def crear_solicitud_tutoria(request):
 
             # Crear la solicitud
             nueva_solicitud = SolicitudTutoria.objects.create(
+                estudiante=request.user,
                 nombre_tutoria=nombre_tutoria,
                 descripcion=descripcion,
-                estado="Pendiente"  # Establecer estado inicial
+                estado="Pendiente"
             )
             return JsonResponse({'message': 'Solicitud creada exitosamente.'}, status=201)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'El cuerpo de la solicitud debe ser un JSON válido.'}, status=400)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Método no permitido.'}, status=405)
+
+
+@login_required
+def solicitudes_tutoria_view(request):
+    solicitudes = SolicitudTutoria.objects.filter(estudiante=request.user)  # Filtrar por usuario autenticado
+    context = {
+        'solicitudes': solicitudes
+    }
+    return render(request, 'solicitudes.html', context)
+
 
 # Vista para usuarios no autenticados
 def landing_page(request):
@@ -165,17 +179,34 @@ def home(request):
     }
     return render(request, 'home.html', context)
 
+@login_required
 def obtener_tutorias(request):
-    tutorias = Tutoria.objects.all()  # Obtener todas las tutorías
+    tutorias = Tutoria.objects.all()
     data = [
         {
-            'id': tutoria.id,
-            'titulo': tutoria.titulo,
-            'descripcion': tutoria.descripcion,
-            'duracion': tutoria.duracion,
-            'precio': float(tutoria.precio) if tutoria.precio else None,  # Convertir a float si existe
+            "id": tutoria.id,
+            "titulo": tutoria.titulo,
+            "descripcion": tutoria.descripcion,
+            "duracion_con_unidad": tutoria.duracion_con_unidad(),  # Usar el método aquí
+            "precio": tutoria.precio_display(),  # Mostrar el precio con formato
+            "estudiantes": list(tutoria.estudiantes.values_list("username", flat=True)),
         }
         for tutoria in tutorias
     ]
     return JsonResponse(data, safe=False)
 
+
+@login_required
+@csrf_exempt
+def inscribirse_tutoria(request, tutoria_id):
+    if request.method == 'POST':
+        try:
+            tutoria = Tutoria.objects.get(id=tutoria_id)
+            if request.user in tutoria.estudiantes.all():
+                return JsonResponse({'success': False, 'message': 'Ya estás inscrito en esta tutoría.'})
+            tutoria.estudiantes.add(request.user)
+            tutoria.save()
+            return JsonResponse({'success': True, 'message': 'Inscripción exitosa.'})
+        except Tutoria.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'La tutoría no existe.'})
+    return JsonResponse({'success': False, 'message': 'Método no permitido.'})

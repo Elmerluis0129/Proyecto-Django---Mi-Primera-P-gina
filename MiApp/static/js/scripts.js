@@ -1,4 +1,3 @@
-/*SECCION PARA NOTICIAS-TUTORIAS***********************************************************/
 document.addEventListener('DOMContentLoaded', () => {
     const tutoriasContainer = document.getElementById('tutorias-container');
     const viewLargeButton = document.getElementById('view-large');
@@ -8,25 +7,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalTutoriasElement = document.getElementById('total-tutorias');
     const currentPageElement = document.getElementById('current-page');
     const searchInput = document.getElementById('search-input'); // Campo de búsqueda
+    const requestTutoriaBtn = document.getElementById('request-tutoria-btn'); // Botón para abrir el modal
+    const requestTutoriaModalElement = document.getElementById('solicitarTutoriaModal'); // Modal
+    const formSolicitarTutoria = document.getElementById('form-solicitar-tutoria'); // Formulario
 
     let tutorias = [];
     let filteredTutorias = [];
     let currentPage = 1;
     let itemsPerPage = 5;
     let currentView = 'large';
+    let expandedTutoriaId = null; // Almacena el ID de la tutoría en "Vista Grande"
 
     // Función para cargar las tutorías desde el backend
     const fetchTutorias = async () => {
         try {
             const response = await fetch('/obtener_tutorias/');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
             tutorias = data;
-            filteredTutorias = tutorias; // Inicialmente, no hay filtro
-            totalTutoriasElement.textContent = `Total: ${filteredTutorias.length} tutorías disponibles`;
+            filteredTutorias = tutorias;
+            totalTutoriasElement.textContent = `Total: ${filteredTutorias.length} tutorías disponibles`; // Actualiza el total
             renderTutorias();
         } catch (error) {
             console.error('Error al cargar las tutorías:', error);
         }
+    };
+
+    // Resaltar coincidencias en el texto
+    const highlightText = (text, searchTerm) => {
+        const regex = new RegExp(`(${searchTerm})`, 'gi'); // Utilizamos una expresión regular que no distinga entre mayúsculas y minúsculas
+        return text.replace(regex, '<span class="highlight">$1</span>'); // Subraya el texto coincidente
+    };
+
+    // Función para calcular las columnas basadas en la raíz cuadrada
+    const calculateColumns = (totalItems) => {
+        const columns = Math.ceil(Math.sqrt(totalItems)); // Calcula la raíz cuadrada y redondea hacia arriba
+        return columns;
     };
 
     // Filtrar tutorías por nombre o descripción
@@ -41,59 +59,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         totalTutoriasElement.textContent = `Total: ${filteredTutorias.length} tutorías disponibles`;
         currentPage = 1; // Reiniciar a la primera página cuando se realice un filtro
-        renderTutorias();
+        renderTutorias(searchTerm); // Pasamos el término de búsqueda a la función render
     };
 
-    // Resaltar coincidencias en el texto
-    const highlightText = (text, searchTerm) => {
-        const regex = new RegExp(`(${searchTerm})`, 'gi');
-        return text.replace(regex, '<span class="highlight">$1</span>'); // Subraya el texto coincidente
-    };
+    // Renderizar las tutorías y resaltar las coincidencias
+    const renderTutorias = (searchTerm) => {
+        tutoriasContainer.innerHTML = ''; // Limpiar contenedor
+        const columns = calculateColumns(filteredTutorias.length); // Calcula el número de columnas
+        tutoriasContainer.style.gridTemplateColumns = `repeat(${columns}, 1fr)`; // Define el número de columnas en CSS Grid
 
-    // Renderizar las tutorías
-    const renderTutorias = () => {
-        tutoriasContainer.innerHTML = '';
-        const start = (currentPage - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        const paginatedTutorias = filteredTutorias.slice(start, end);
-
-        // Calcular el número de columnas basado en la raíz cuadrada de la cantidad total de tutorías
-        const columns = Math.sqrt(filteredTutorias.length);
-        const columnCount = Math.ceil(columns); // Redondear hacia arriba para obtener el número entero
-        tutoriasContainer.style.gridTemplateColumns = `repeat(${columnCount}, 1fr)`; // Cambiar el número de columnas en CSS
+        const paginatedTutorias = filteredTutorias.slice(
+            (currentPage - 1) * itemsPerPage,
+            currentPage * itemsPerPage
+        );
 
         paginatedTutorias.forEach(tutoria => {
-            const title = highlightText(tutoria.titulo, searchInput.value); // Resaltar coincidencias en el título
-            const description = highlightText(tutoria.descripcion, searchInput.value); // Resaltar coincidencias en la descripción
+            const title = highlightText(tutoria.titulo, searchTerm); // Resaltar coincidencias en el título
+            const description = highlightText(tutoria.descripcion, searchTerm); // Resaltar coincidencias en la descripción
 
-            if (currentView === 'large') {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <h3>${title}</h3>
-                    <p>${description}</p>
-                    <p><strong>Duración:</strong> ${tutoria.duracion} minutos</p>
-                    <p><strong>Precio:</strong> ${tutoria.precio ? formatPrice(tutoria.precio) : 'Gratis'}</p>
-                    <button class="btn btn-primary">Inscribirse</button>
-                `;
-                tutoriasContainer.appendChild(card);
-            } else {
+            if (currentView === 'small' && expandedTutoriaId !== tutoria.id) {
                 const cardSmall = document.createElement('div');
                 cardSmall.className = 'card-small';
                 cardSmall.innerHTML = `
                     <h3>${title}</h3>
-                    <span>${tutoria.precio ? formatPrice(tutoria.precio) : 'Gratis'}</span>
+                    <p><strong>Precio:</strong> ${tutoria.precio || 'Gratis'}</p>
                 `;
                 cardSmall.addEventListener('click', () => {
-                    currentView = 'large';
+                    expandedTutoriaId = tutoria.id;
                     renderTutorias();
                 });
                 tutoriasContainer.appendChild(cardSmall);
+            } else {
+                const cardLarge = document.createElement('div');
+                cardLarge.className = 'card';
+                cardLarge.innerHTML = `
+                    <h3>${title}</h3>
+                    <p>${description}</p>
+                    <p><strong>Duración:</strong> ${tutoria.duracion_con_unidad || 'No disponible'}</p>
+                    <p><strong>Precio:</strong> ${tutoria.precio || 'Gratis'}</p>
+                `;
+                cardLarge.addEventListener('click', () => {
+                    expandedTutoriaId = null;
+                    renderTutorias();
+                });
+                tutoriasContainer.appendChild(cardLarge);
             }
         });
 
-        renderPagination();
+        renderPagination(); // Actualizar paginación
     };
+
+    const updateViewButtons = () => {
+        viewLargeButton.classList.toggle('active', currentView === 'large');
+        viewSmallButton.classList.toggle('active', currentView === 'small');
+    };
+
+    // Alternar entre vistas
+    viewLargeButton.addEventListener('click', () => {
+        currentView = 'large';
+        updateViewButtons(); // Actualizar los estilos de los botones
+        renderTutorias();    // Renderizar las tutorías en vista grande
+    });
+
+    viewSmallButton.addEventListener('click', () => {
+        currentView = 'small';
+        updateViewButtons(); // Actualizar los estilos de los botones
+        renderTutorias();    // Renderizar las tutorías en vista pequeña
+    });
 
     // Renderizar los controles de paginación
     const renderPagination = () => {
@@ -130,81 +162,58 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPageElement.textContent = currentPage;
     };
 
-    // Alternar entre vistas
-    viewLargeButton.addEventListener('click', () => {
-        currentView = 'large';
-        updateViewButtons();
-        renderTutorias();
-    });
-
-    viewSmallButton.addEventListener('click', () => {
-        currentView = 'small';
-        updateViewButtons();
-        renderTutorias();
-    });
-
-    // Actualizar el estilo de los botones de vista
-    const updateViewButtons = () => {
-        viewLargeButton.classList.toggle('active', currentView === 'large');
-        viewSmallButton.classList.toggle('active', currentView === 'small');
+    // Función para abrir el modal
+    const openModal = () => {
+        requestTutoriaModalElement.style.display = 'block'; // Mostrar el modal
     };
 
-    // Actualizar el número de elementos por página
-    itemsPerPageSelect.addEventListener('change', () => {
-        itemsPerPage = parseInt(itemsPerPageSelect.value, 10); // Obtener el valor seleccionado
-        currentPage = 1; // Reiniciar a la primera página
-        renderTutorias();
-    });
+    // Función para cerrar el modal
+    const closeModal = () => {
+        requestTutoriaModalElement.style.display = 'none'; // Ocultar el modal
+    };
 
-    // Formatear precios
-    const formatPrice = (price) => {
-        return parseFloat(price).toLocaleString('en-US', {
-            style: 'currency',
-            currency: 'USD',
+    // Lógica del botón de solicitud de tutoría
+    if (requestTutoriaBtn) {
+        requestTutoriaBtn.addEventListener('click', openModal); // Al hacer clic, abre el modal
+    }
+
+    // Lógica del botón de cierre del modal
+    const closeModalBtn = document.getElementById('close-modal'); // Botón de cierre
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal); // Al hacer clic, cierra el modal
+    }
+
+    // Lógica del formulario de solicitud de tutoría
+    if (formSolicitarTutoria) {
+        formSolicitarTutoria.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const nombreTutoria = document.getElementById('nombre-tutoria').value.trim();
+            const descripcionTutoria = document.getElementById('descripcion-tutoria').value.trim();
+            const horarioDisponible = document.getElementById('horario-disponible').value;
+
+            if (!nombreTutoria || !descripcionTutoria || !horarioDisponible) {
+                alert('Por favor, completa todos los campos.');
+                return;
+            }
+
+            alert('¡Solicitud enviada correctamente!');
+            formSolicitarTutoria.reset(); // Limpiar el formulario
+            closeModal(); // Cerrar el modal
         });
-    };
+    }
+
+    // Inicializar
+    fetchTutorias();
 
     // Buscar tutorías cuando el usuario escriba en el campo de búsqueda
     searchInput.addEventListener('input', () => {
         const searchTerm = searchInput.value.trim();
         filterTutorias(searchTerm);
     });
-
-    // Inicializar
-    fetchTutorias();
 });
 
-// Abrir el modal al hacer clic en el botón "Solicitar Tutoría"
-document.getElementById('request-tutoria-btn').addEventListener('click', () => {
-    document.getElementById('requestTutoriaModal').style.display = 'block'; // Mostrar el modal
-});
 
-// Cerrar el modal al hacer clic en el botón de cerrar (x)
-document.getElementById('close-modal').addEventListener('click', () => {
-    document.getElementById('requestTutoriaModal').style.display = 'none'; // Ocultar el modal
-});
-
-// Manejar el envío del formulario
-document.getElementById('request-tutoria-form').addEventListener('submit', (e) => {
-    e.preventDefault(); // Prevenir el envío del formulario
-
-    const tutoriaName = document.getElementById('tutoria-name').value;
-    const tutoriaDescription = document.getElementById('tutoria-description').value;
-
-    if (tutoriaName && tutoriaDescription) {
-        // Aquí puedes hacer algo con los datos, como enviarlos al servidor
-        console.log('Nombre de tutoría:', tutoriaName);
-        console.log('Descripción:', tutoriaDescription);
-
-        // Cerrar el modal después de enviar la solicitud
-        document.getElementById('requestTutoriaModal').style.display = 'none';
-
-        // Puedes agregar un mensaje de éxito aquí
-        alert('¡Solicitud enviada correctamente!');
-    } else {
-        alert('Por favor, completa ambos campos.');
-    }
-});
 /*SECCION PARA NOTICIAS-TUTORIAS***********************************************************/
 
 /*SECCION PARA LOGIN***********************************************************/

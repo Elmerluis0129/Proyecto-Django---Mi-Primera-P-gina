@@ -56,7 +56,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'ProyectoFinal.urls'
 
-STATIC_URL = '/static/'
 
 # Solo para desarrollo
 if DEBUG:
@@ -92,9 +91,8 @@ TEMPLATES = [
 
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
-
-
+STATICFILES_DIRS = [BASE_DIR / 'static']  # Directorio donde tienes los archivos estáticos globales
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # Directorio donde se colectarán los archivos
 
 LOGIN_REDIRECT_URL = 'home'  # Redirige a 'home' después de un login exitoso
 

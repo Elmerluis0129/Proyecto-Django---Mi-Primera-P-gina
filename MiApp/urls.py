@@ -11,8 +11,9 @@ urlpatterns = [
     path('politicas/', views.politicas, name='politicas'),
     path('contacto/', views.contacto, name='contacto'),
     path('noticias/', views.noticias, name='noticias'),
-    path('obtener_tutorias/', views.obtener_tutorias, name='obtener_tutorias'),
     path('mis-citas/', views.citas_view, name='mis_citas'),  # Aquí está la URL que debería usarse
+    path('solicitudes/', views.solicitudes_tutoria_view, name='solicitudes'),
+    path('obtener_tutorias/', views.obtener_tutorias, name='obtener_tutorias'),
+    path('inscribirse/<int:tutoria_id>/', views.inscribirse_tutoria, name='inscribirse_tutoria'),
     path('crear-solicitud-tutoria/', views.crear_solicitud_tutoria, name='crear_solicitud_tutoria'),
 ]
-

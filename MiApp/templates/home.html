@@ -48,7 +48,9 @@
 
     <!-- Botón de Panel Administrativo -->
     <div class="text-center mt-4">
+        {% if user.is_authenticated and user.is_staff %}
         <a href="{% url 'admin:index' %}" target="_blank" class="btn btn-primary">Panel Administrativo</a>
+        {% endif %}
     </div>
 
     <!-- Botón de Logout -->
