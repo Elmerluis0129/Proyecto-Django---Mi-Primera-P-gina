@@ -1,2 +1,2 @@
-# Proyecto-Django---Mi-Primera-P-gina
+# Proyecto-Django-TutorConnect
 Este es un proyecto realizado con Django.
